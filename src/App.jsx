@@ -7,10 +7,41 @@ import ModelCard from "./components/ModelCard";
 
 function App() {
   const [userPrompt, setUserPrompt] = useState("");
+  const [geminiResponse, setGeminiResponse] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  function handlePrompt(prompt) {
+  async function handlePrompt(prompt) {
     setUserPrompt(prompt);
-    console.log("User prompt:", prompt);
+    setGeminiResponse("");
+    setError("");
+    setLoading(true);
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          prompt: prompt,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Something went wrong");
+      }
+
+      setGeminiResponse(data.response);
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -36,15 +67,16 @@ function App() {
             <ModelCard
               name="Gemini"
               provider="Google"
-              response={userPrompt || "Waiting for your prompt..."}
-              loading={false}
-              error={null}
+              response={geminiResponse}
+              loading={loading}
+              error={error}
             />
 
+            {/*
             <ModelCard
               name="Llama"
               provider="Groq"
-              response={userPrompt || "Waiting for your prompt..."}
+              response=""
               loading={false}
               error={null}
             />
@@ -52,10 +84,11 @@ function App() {
             <ModelCard
               name="Qwen"
               provider="OpenRouter"
-              response={userPrompt || "Waiting for your prompt..."}
+              response=""
               loading={false}
               error={null}
             />
+            */}
           </section>
         </main>
       </div>
